@@ -19,6 +19,6 @@ the settings files must be put in the same directory as main.cpp
 Example of settings:
 
 
-task_names=Task 1,Task 2,Task 3,Task 4, test, newtest,
+''' task_names=Task 1,Task 2,Task 3,Task 4, test, newtest,
 timer_duration=300
-refresh_rate=5
+refresh_rate=5 '''
