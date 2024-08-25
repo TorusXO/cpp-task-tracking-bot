@@ -14,7 +14,7 @@ The token should be put in the file `bot_token.txt`.
 
 The settings file must be named `settings.txt`.
 
-The settings files must be put in the same directory as `main.cpp`.
+The settings files must be put in the same directory as `main.cpp or exe file`.
 
 ### Example of settings
 
