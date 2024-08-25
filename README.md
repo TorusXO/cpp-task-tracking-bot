@@ -16,9 +16,11 @@ The settings file must be named `settings.txt`.
 
 The settings files must be put in the same directory as `main.cpp or exe file`.
 
+You need to have the Microsoft Visual C++ Redistributable for Visual Studio 2015-2019, or 2022 x64 (64-bit) installed
 ### Example of settings
 
 ```plaintext
 task_names=Task 1,Task 2,Task 3,Task 4,test,newtest,
 timer_duration=300
 refresh_rate=5
+
