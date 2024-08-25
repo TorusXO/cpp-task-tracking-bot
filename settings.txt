@@ -1,0 +1,3 @@
+task_names=Task 1,Task 2,Task 3,Task 4, test, newtest,
+timer_duration=300
+refresh_rate=5
