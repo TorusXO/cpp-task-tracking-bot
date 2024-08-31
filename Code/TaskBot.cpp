@@ -65,13 +65,18 @@ void stopCurrentTimer(TgBot::Bot& bot) {
     {
         std::lock_guard<std::mutex> lock(dataMutex);
         if (activeTask.empty()) {
-            return;
+            return;  // No active task to stop
         }
-        stopTimer = true;
+        stopTimer = true;  // Signal the timer thread to stop
     }
 
     if (timerThread.joinable()) {
-        timerThread.join();
+        try {
+            timerThread.join();  // Wait for the timer thread to finish
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error joining timer thread: " << e.what() << std::endl;
+        }
     }
 
     {
@@ -94,11 +99,11 @@ void stopCurrentTimer(TgBot::Bot& bot) {
             }
 
             bot.getApi().editMessageText(messageText, activeChatId, activeMessageId);
-            activeTask.clear();
+            activeTask.clear();  // Clear the active task
         }
     }
 
-    stopTimer = false;
+    stopTimer = false;  // Reset the stop flag for future timers
 }
 
 void startTask(TgBot::Bot& bot, const std::string& taskName, int64_t chatId) {
@@ -119,11 +124,22 @@ void startTask(TgBot::Bot& bot, const std::string& taskName, int64_t chatId) {
         }
     }
 
+    // Ensure previous thread is joined before starting a new one
+    if (timerThread.joinable()) {
+        try {
+            timerThread.join();
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error joining previous timer thread: " << e.what() << std::endl;
+        }
+    }
+
     timerThread = std::thread([&bot, taskName, chatId]() {
+        bool shouldStop = false;
+
         while (true) {
             std::this_thread::sleep_for(std::chrono::seconds(refreshRate));
 
-            bool shouldStop = false;
             long remainingTime = 0;
             std::map<std::string, TaskData> currentTasksData;
 
@@ -138,7 +154,7 @@ void startTask(TgBot::Bot& bot, const std::string& taskName, int64_t chatId) {
                 remainingTime = timerDuration - elapsedTime;
 
                 if (remainingTime <= 0) {
-                    shouldStop = true;
+                    shouldStop = true;  // Signal that the timer has expired
                 }
                 else {
                     currentTasksData = tasksData;
@@ -146,8 +162,6 @@ void startTask(TgBot::Bot& bot, const std::string& taskName, int64_t chatId) {
             }
 
             if (shouldStop) {
-                bot.getApi().editMessageText("Time's up for task: " + taskName, chatId, activeMessageId);
-
                 {
                     std::lock_guard<std::mutex> lock(dataMutex);
                     TaskData& data = tasksData[taskName];
@@ -164,10 +178,10 @@ void startTask(TgBot::Bot& bot, const std::string& taskName, int64_t chatId) {
                     }
 
                     bot.getApi().editMessageText(messageText, chatId, activeMessageId);
-                    activeTask.clear();
+                    activeTask.clear();  // Clear the active task
                 }
 
-                break;
+                break;  // Exit the timer thread
             }
             else {
                 std::string messageText = "Task: " + taskName + "\nTime remaining: " + std::to_string(remainingTime) + " seconds\n";
